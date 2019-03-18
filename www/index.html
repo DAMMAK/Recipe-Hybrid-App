@@ -1,0 +1,368 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <script src="components/loader.js"></script>
+  <script src="lib/angular/angular.min.js"></script>
+  <script src="lib/onsenui/js/onsenui.min.js"></script>
+  <script src="lib/onsenui/js/angular-onsenui.min.js"></script>
+
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    ons.bootstrap().
+      controller('SplashScreen', function ($scope) {
+
+      })
+      .controller('AppController', function ($scope, $http) {
+
+        $scope.title = 'Tab 1';
+        $scope.updateTitle = function ($event) {
+          $scope.title = angular.element($event.tabItem).attr('label');
+        };
+
+        var config = 'http://192.168.1.81:5000/recipe/';
+        console.log(config);
+        $scope.recipeArray = [];
+        $scope.recipe = {
+          Ingredients: "",
+          Measurements: "",
+          Category: "",
+          Name: "",
+          Instruction: "",
+          ThumbImg: "",
+          Video: "",
+          Source: "",
+        };
+
+        var getAllRecipe = function () {
+          $http.get(config).then(function (res) {
+            console.log(res.data);
+            $scope.recipeArray = res.data;
+          }).catch(function (ex) {
+            console.log("[Error]", ex);
+          })
+
+        }
+        getAllRecipe();
+
+
+        $scope.bookmarkRecipeArray = [];
+        var userId = "5c8a8d5f1c9d44000010eb60";
+        var getBookmarks = function () {
+          $http.get(config + userId).then(function (res) {
+            console.log(res.data);
+            $scope.bookmarkRecipeArray = res.data;
+          }).catch(function (ex) {
+            console.log("[Error]", ex);
+          })
+
+        }
+        getBookmarks();
+
+
+
+        $scope.bookmark = function (title, Category, Ingredients, Measurements, Instruction, ThumbImg, Video, Source) {
+          $scope.recipe.Name = title;
+          $scope.recipe.Category = Category;
+          $scope.recipe.Ingredients = Ingredients;
+          $scope.recipe.Measurements = Measurements;
+          $scope.recipe.Instruction = Instruction;
+          $scope.recipe.ThumbImg = ThumbImg;
+          $scope.recipe.Video = Video;
+          $scope.recipe.Source = Source;
+
+          console.log($scope.recipe);
+          var userId = "5c8a8d5f1c9d44000010eb60";
+          var req = {
+            method: 'POST',
+            url: config + userId,
+            data: $scope.recipe
+          }
+          $http(req).then(function (res) {
+            console.log("[Create Task]", res.data);
+          }).catch(function (err) {
+            console.log('[Error Message] ', err.data);
+
+          });
+          getBookmarks();
+        };
+
+        $scope.removeBookmark = function (index) {
+
+          console.log(index);
+          var userId = "5c8a8d5f1c9d44000010eb60/";
+          console.log(index);
+          var index = index;
+          var taskId = $scope.bookmarkRecipeArray[index]._id
+          var req = {
+            method: 'DELETE',
+            url: config + userId + taskId,
+          }
+          $http(req).then(function (res) {
+            console.log("[Deleted]", res.data);
+
+          }).catch(function (err) {
+            console.log('[Error Message] ', err.data);
+
+          })
+
+        };
+
+        $scope.btnToggle = function (id_hide, id_show) {
+
+          var get = document.querySelector(id_hide);
+          var set = document.getElementById(id_show);
+          get.style.display = "none";
+          set.style.display = "inline";
+        };
+
+
+        $scope.collect = function (index) {
+          console.log("[test]", index);
+          $scope.recipe = {
+            Ingredients: $scope.recipeArray[index].Ingredients,
+            Measurements: $scope.recipeArray[index].Measurements,
+          }
+        };
+
+
+
+        this.load = function (page) {
+          $scope.splitter.content.load(page);
+          $scope.splitter.left.close();
+        };
+
+        this.toggle = function () {
+          $scope.splitter.left.toggle();
+        };
+      });
+
+    ons.ready(function () {
+      console.log("Onsen UI is ready!");
+    });
+  </script>
+</head>
+
+<body>
+  <ons-template id="splash.html">
+    <ons-page ng-controller="">
+      <div class="splash__title">
+        <h1>Recipe App</h1>
+      </div>
+    </ons-page>
+  </ons-template>
+  <ons-splitter ng-controller="AppController as app" var="splitter">
+    <ons-splitter-side side="left" width="220px" collapse swipeable>
+      <ons-page>
+        <ons-list>
+          <ons-list-item ng-click="app.load('home.html')" tappable>
+            Home
+          </ons-list-item>
+          <ons-list-item ng-click="app.load('settings.html')" tappable>
+            Settings
+          </ons-list-item>
+          <ons-list-item ng-click="app.load('about.html')" tappable>
+            About
+          </ons-list-item>
+        </ons-list>
+      </ons-page>
+    </ons-splitter-side>
+    <ons-splitter-content page="home.html"></ons-splitter-content>
+  </ons-splitter>
+  <ons-navigator swipeable var="myNavigator" page="home.html"></ons-navigator>
+
+
+  <ons-template id="home.html">
+    <ons-page ng-controller="AppController as app">
+
+      <ons-toolbar class="toolbar toolbar--material">
+        <div class="toolbar__left toolbar--material__left">
+          <span class="toolbar-button toolbar-button--material">
+            <i class="zmdi zmdi-home"></i>
+          </span>
+        </div>
+        <div ng-click="click();" class="toolbar__center toolbar--material__center">
+          Greyc Recipe
+        </div>
+        <div class="toolbar__right toolbar--material__right">
+          <span class="toolbar-button toolbar-button--material">
+            <i class="zmdi zmdi-search white"></i>
+          </span>
+          <span class="toolbar-button toolbar-button--material">
+            <i class="zmdi zmdi-more-vert white"></i>
+          </span>
+        </div>
+      </ons-toolbar>
+
+
+
+      <ons-tabbar swipeable position="auto" ons-prechange="updateTitle($event)">
+        <ons-tab page="tab1.html" icon="ion-home, material:md-book" badge="7" active>
+        </ons-tab>
+        <ons-tab page="tab2.html" icon="md-bookmark" active-icon="md-bookmark-outline">
+        </ons-tab>
+      </ons-tabbar>
+
+      <template id="tab1.html">
+        <ons-page id="Tab1">
+
+          <ons-card ng-repeat="data in recipeArray" ng-click="myNavigator.pushPage('viewRecipe.html', {data: {
+              title: data.Name,
+              Category: data.Category,
+              Instruction: data.Instruction,
+              Ingredients: data.Ingredients,
+              Measurements: data.Measurements,
+              ThumbImg: data.ThumbImg,
+              Video: data.Video,
+              Source:data.Source,
+              newRecipe: ['.'],
+               }});collect($index)">
+            <img ng-src={{data.ThumbImg}} alt="Recipe Photo" class="cus-card-img">
+            <div>
+              <h3 class="title">{{data.Name}}</h3>
+              <ons-icon class="cus-card-icon-category" icon="ion-ios-box"></ons-icon><span
+                style="opacity:0.7; font-style: italic; padding-top: 10px;"> &nbsp;{{data.Category}}</span>
+              <ons-icon class="cus-card-icon-favourite" icon="md-bookmark-outline"></ons-icon>
+              <!-- <ons-button ng-click="myNavigator.pushPage('viewRecipe.html', {data: {title: 'recipe'}})">Push page</ons-button> -->
+            </div>
+          </ons-card>
+
+        </ons-page>
+      </template>
+
+      <template id="tab2.html">
+        <ons-page id="Tab2">
+          <ons-card ng-repeat="data in bookmarkRecipeArray" ng-click="myNavigator.pushPage('viewRecipe.html', {data: {
+              title: data.Name,
+              Category: data.Category,
+              Instruction: data.Instruction,
+              Ingredients: data.Ingredients,
+              Measurements: data.Measurements,
+              ThumbImg: data.ThumbImg,
+              Video: data.Video,
+              Source:data.Source,
+              newRecipe: ['.'],
+               }});collect($index)">
+            <img ng-src={{data.ThumbImg}} alt="Recipe Photo" class="cus-card-img">
+            <div>
+              <h3 class="title">{{data.Name}}</h3>
+              <ons-icon class="cus-card-icon-category" icon="ion-ios-pricetags"></ons-icon><span
+                style="opacity:0.7; font-style: italic; padding-top: 10px;"> &nbsp;{{data.Category}}</span>
+              <ons-icon class="cus-card-icon-favourite" icon="md-delete"
+                ng-click="removeBookmark($index); bookmarkRecipeArray.splice($index,1)"></ons-icon>
+              <!-- <ons-button ng-click="myNavigator.pushPage('viewRecipe.html', {data: {title: 'recipe'}})">Push page</ons-button> -->
+            </div>
+          </ons-card>
+        </ons-page>
+      </template>
+
+      <template id="viewRecipe.html">
+        <ons-page ons-init="app.init($event)" ng-controller="AppController as app">
+          <ons-toolbar>
+            <div class="left" style="color:#fff">
+              <ons-back-button>Page 1</ons-back-button>
+            </div>
+            <div class="center">{{ myNavigator.topPage.data.title }}</div>
+          </ons-toolbar style>
+
+          <div>
+            <div class="cus-img-container">
+              <img ng-src={{myNavigator.topPage.data.ThumbImg}} alt="">
+              <div class="after"></div>
+            </div>
+            <ons-list>
+              <ons-list-item style="font-size: 25px;">{{ myNavigator.topPage.data.title }}</ons-list-item>
+
+              <ons-list-header style="color: #000;">Category</ons-list-header>
+              <ons-list-item style="opacity: 0.7; font-size: 16px;">{{myNavigator.topPage.data.Category}}
+              </ons-list-item>
+
+              <ons-list-item expandable>
+                <ons-icon icon="ion-ios-compose-outline" style="margin-right: 10px; font-size: 30px;"></ons-icon>
+                Ingredients
+                <div class="expandable-content" style="opacity: 0.7; font-size: 15px;"
+                  ng-repeat=" element in recipeArray">{{element.Ingredients[0]}} &nbsp; -
+                  &nbsp;{{element.Measurements[0]}}</div>
+                <!-- <div ng-repeat=" element in recipeArray"></div> -->
+              </ons-list-item>
+
+
+              <ons-list-item expandable>
+                <ons-icon icon="ion-ios-compose-outline" style="margin-right: 10px; font-size: 30px;"></ons-icon>
+                Instruction
+                <div class="expandable-content">{{myNavigator.topPage.data.Instruction}}</div>
+              </ons-list-item>
+            </ons-list>
+          </div>
+
+
+          <!-- <p>{{myNavigator.topPage.data.Video}}</p> -->
+          <div style="width:100%;height:100%; height: 261.25px; float: none; clear: both; margin: 2px auto;">
+            <embed
+              src="http://www.youtube.com/v/GlIzuTQGgzs?version=3&amp;hl=en_US&amp;rel=0&amp;autohide=1&amp;autoplay=1"
+              wmode="transparent" type="application/x-shockwave-flash" width="100%" height="100%" allowfullscreen="true"
+              title="Adobe Flash Player">
+          </div>
+
+          <div style="margin: 15px;">
+            <ons-button modifier="large" class="bookmark-save-btn" id="save"
+              ng-click="bookmark(myNavigator.topPage.data.title,myNavigator.topPage.data.Category,myNavigator.topPage.data.Ingredients,myNavigator.topPage.data.Measurements,myNavigator.topPage.data.Instruction,myNavigator.topPage.data.ThumbImg,myNavigator.topPage.data.Video,myNavigator.topPage.data.Source)">
+              <ons-icon icon="ion-bookmark" style="margin-right: 10px; font-size: 30px;"></ons-icon>Save
+            </ons-button>
+            <ons-button modifier="large" class="bookmark-source-btn" id="source">
+              <ons-icon icon="ion-social-chrome" style="margin-right: 10px; font-size: 20px;"></ons-icon>Source
+            </ons-button>
+            <ons-button modifier="large" class="bookmark-disabled-btn" id="disable" disabled="true">
+              <ons-icon icon="ion-bookmark" style="margin-right: 10px; font-size: 30px;"></ons-icon>Save
+            </ons-button>
+
+          </div>
+
+
+        </ons-page>
+      </template>
+    </ons-page>
+  </ons-template>
+
+
+
+  <ons-template id="settings.html">
+    <ons-page>
+      <ons-toolbar>
+        <div class="left">
+          <ons-toolbar-button ng-click="app.toggle()">
+            <ons-icon icon="md-menu"></ons-icon>
+          </ons-toolbar-button>
+        </div>
+        <div class="center">
+          Settings
+        </div>
+      </ons-toolbar>
+    </ons-page>
+  </ons-template>
+
+  <ons-template id="about.html">
+    <ons-page>
+      <ons-toolbar>
+        <div class="left">
+          <ons-toolbar-button ng-click="app.toggle()">
+            <ons-icon icon="md-menu"></ons-icon>
+          </ons-toolbar-button>
+        </div>
+        <div class="center">
+          About
+        </div>
+      </ons-toolbar>
+    </ons-page>
+  </ons-template>
+</body>
+
+</html>
